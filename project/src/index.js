@@ -6,6 +6,7 @@ import { config } from 'dotenv';
 
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
+import todoRoutes from './routes/todo.routes.js';
 import { authenticateToken } from './middleware/auth.middleware.js';
 
 config();
@@ -13,30 +14,22 @@ config();
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.CORS_ORIGIN,
+  credential: true
+}));
 app.use(express.json());
 app.use(cookieParser());
 
-// Database connection with better error handling
+// Database connection
 mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('Connected to MongoDB Atlas'))
-  .catch((err) => {
-    console.error('MongoDB connection error:', err);
-    process.exit(1); // Exit if we can't connect to the database
-  });
-
-// Connection error handling
-mongoose.connection.on('error', err => {
-  console.error('MongoDB connection error:', err);
-});
-
-mongoose.connection.on('disconnected', () => {
-  console.log('MongoDB disconnected');
-});
+  .then(() => console.log('Connected to MongoDB'))
+  .catch((err) => console.error('MongoDB connection error:', err));
 
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', authenticateToken, userRoutes);
+app.use('/api/todos', authenticateToken, todoRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
